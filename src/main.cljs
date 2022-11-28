@@ -32,7 +32,7 @@
           {:type "string"
            :name "path"
            :label "File location"
-           :initialValue (str (.cwd js/process) "/video.mp4")}]}]}}]]])
+           :initialValue (str (.-PWD (.-env js/process)) "/video.mp4")}]}]}}]]])
 
 
 (render (r/as-element [Main]))
