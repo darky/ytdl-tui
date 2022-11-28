@@ -1,17 +1,16 @@
 {
-  "name": "youtube-download-tui",
+  "name": "ytdl-tui",
   "version": "0.9.0",
   "description": "TUI for downloading Youtube videos",
-  "main": "src/main.cljs",
   "repository": {
     "type": "git",
-    "url": "git://github.com/darky/youtube-download-tui.git"
+    "url": "git://github.com/darky/ytdl-tui.git"
   },
   "files": [
     "src"
   ],
   "bin": {
-    "youtube-download-tui": "./run.sh"
+    "ytdl-tui": "./run.sh"
   },
   "scripts": {
     "dev": "nbb --classpath \"src\" nrepl-server",

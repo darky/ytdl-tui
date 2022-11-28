@@ -1,4 +1,4 @@
-# youtube-download-tui
+# ytdl-tui
 
 TUI for downloading Youtube videos
 
@@ -6,11 +6,11 @@ TUI for downloading Youtube videos
 
 ### Install
 
-`npm install youtube-download-tui -g`
+`npm install ytdl-tui -g`
 
 ### Usage
 
-`youtube-download-tui`
+`ytdl-tui`
 
 <!-- ### Tip
 
