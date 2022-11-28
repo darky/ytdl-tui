@@ -3,7 +3,7 @@
    ["ink$default" :refer [Box render]]
    ["ink-big-text$default" :as Bigtext]
    ["ink-form$default" :refer [Form]]
-   ["ytdl-core$default" :as ytdl]
+   ["ytdl-core-muxer$default" :as ytdl]
    ["fs" :as fs]
    [reagent.core :as r]))
 
