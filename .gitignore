@@ -1,5 +1,2 @@
-/.calva
-/.clj-kondo
-/.lsp
-/.nrepl-port
+/dist
 /node_modules
