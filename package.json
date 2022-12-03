@@ -7,13 +7,15 @@
     "url": "git://github.com/darky/ytdl-tui.git"
   },
   "files": [
-    "src"
+    "dist/index.js"
   ],
   "bin": {
-    "ytdl-tui": "./run.sh"
+    "ytdl-tui": "./dist/index.js"
   },
   "scripts": {
-    "dev": "node --inspect -r ts-node/register/transpile-only -r tsconfig-paths/register src/index.tsx"
+    "build": "rm -rf dist && npx tsc && sed -i '1 i #!/usr/bin/env node' dist/index.js && chmod +x dist/index.js",
+    "dev": "node --inspect -r ts-node/register/transpile-only -r tsconfig-paths/register src/index.tsx",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "youtube",
