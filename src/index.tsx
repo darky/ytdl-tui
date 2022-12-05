@@ -17,6 +17,7 @@ const mainNS = ns('main', {
     const [path, setPath] = useAtom(mainNS().path$)
     const [downloaded, setDownloaded] = useAtom(mainNS().downloaded$)
     const [downloadInProgress, setDownloadInProgress] = useAtom(mainNS().downloadInProgress$)
+    const [downloadError, setDownloadError] = useAtom(mainNS().downloadError$)
 
     return (
       <Box flexDirection="column">
@@ -28,6 +29,8 @@ const mainNS = ns('main', {
             <Spinner type="aesthetic" />
           ) : downloaded ? (
             <Text color={'green'}>✅ Video downloaded!</Text>
+          ) : downloadError ? (
+            <Text color={'red'}>{downloadError.message}</Text>
           ) : null}
         </Box>
         <Box>
@@ -36,7 +39,7 @@ const mainNS = ns('main', {
             onSubmit={obj => {
               setDownloaded(() => false)
               setDownloadInProgress(() => true)
-              mainNS().onDownload(obj as State, setDownloaded, setDownloadInProgress)
+              mainNS().onDownload(obj as State, { setDownloaded, setDownloadInProgress, setDownloadError })
             }}
           />
         </Box>
@@ -83,14 +86,27 @@ const mainNS = ns('main', {
 
   onDownload(
     obj: State,
-    setDownloaded: (update: SetStateAction<boolean>) => void,
-    setDownloadInProgress: (update: SetStateAction<boolean>) => void
+    {
+      setDownloaded,
+      setDownloadInProgress,
+      setDownloadError,
+    }: {
+      setDownloaded: (update: SetStateAction<boolean>) => void
+      setDownloadInProgress: (update: SetStateAction<boolean>) => void
+      setDownloadError: (update: SetStateAction<Error | null>) => void
+    }
   ) {
     yt(obj.url)
+      .on('error', err => {
+        setDownloadInProgress(() => false)
+        setDownloaded(() => false)
+        setDownloadError(() => err)
+      })
       .pipe(fs.createWriteStream(obj.path))
       .on('finish', () => {
         setDownloadInProgress(() => false)
         setDownloaded(() => true)
+        setDownloadError(() => null)
       })
   },
 
@@ -101,6 +117,8 @@ const mainNS = ns('main', {
   downloaded$: atom(false),
 
   downloadInProgress$: atom(false),
+
+  downloadError$: atom<Error | null>(null),
 })
 
 ;(async () => {
