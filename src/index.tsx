@@ -4,6 +4,7 @@ import { Box, render, Text } from 'ink'
 import BigText from 'ink-big-text'
 import { ns } from 'repl-ns'
 import { Form, FormProps } from 'ink-form'
+import Spinner from 'ink-spinner'
 import yt from 'ytdl-core-muxer'
 import fs from 'fs'
 import { atom, SetStateAction, useAtom } from 'jotai'
@@ -15,19 +16,27 @@ const mainNS = ns('main', {
     const [url, setUrl] = useAtom(mainNS().url$)
     const [path, setPath] = useAtom(mainNS().path$)
     const [downloaded, setDownloaded] = useAtom(mainNS().downloaded$)
+    const [downloadInProgress, setDownloadInProgress] = useAtom(mainNS().downloadInProgress$)
 
     return (
       <Box flexDirection="column">
         <Box>
           <BigText text="YOUTUBE DOWNLOAD"></BigText>
         </Box>
-        <Box marginBottom={1}>{downloaded ? <Text color={'green'}>✅ Video downloaded!</Text> : null}</Box>
+        <Box marginBottom={1}>
+          {downloadInProgress ? (
+            <Spinner type="aesthetic" />
+          ) : downloaded ? (
+            <Text color={'green'}>✅ Video downloaded!</Text>
+          ) : null}
+        </Box>
         <Box>
           <Form
             {...mainNS().formProps({ url, path }, { setUrl, setPath })}
             onSubmit={obj => {
               setDownloaded(() => false)
-              mainNS().onDownload(obj as State, setDownloaded)
+              setDownloadInProgress(() => true)
+              mainNS().onDownload(obj as State, setDownloaded, setDownloadInProgress)
             }}
           />
         </Box>
@@ -72,10 +81,17 @@ const mainNS = ns('main', {
       },
     } as FormProps),
 
-  onDownload(obj: State, setDownloaded: (update: SetStateAction<boolean>) => void) {
+  onDownload(
+    obj: State,
+    setDownloaded: (update: SetStateAction<boolean>) => void,
+    setDownloadInProgress: (update: SetStateAction<boolean>) => void
+  ) {
     yt(obj.url)
       .pipe(fs.createWriteStream(obj.path))
-      .on('finish', () => setDownloaded(() => true))
+      .on('finish', () => {
+        setDownloadInProgress(() => false)
+        setDownloaded(() => true)
+      })
   },
 
   url$: atom(''),
@@ -83,6 +99,8 @@ const mainNS = ns('main', {
   path$: atom(''),
 
   downloaded$: atom(false),
+
+  downloadInProgress$: atom(false),
 })
 
 ;(async () => {
