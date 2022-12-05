@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@types/ink-big-text": "1.2.1",
+    "@types/node": "18.11.10",
     "@types/react": "17.0.39",
     "ink-testing-library": "2.1.0",
     "node-remote-repl": "1.1.0",
