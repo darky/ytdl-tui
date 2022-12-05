@@ -6,37 +6,60 @@ import { ns } from 'repl-ns'
 import { Form, FormProps } from 'ink-form'
 import yt from 'ytdl-core-muxer'
 import fs from 'fs'
+import { atom, SetStateAction, useAtom } from 'jotai'
 
-const main = ns('main', {
-  Main: () => (
-    <Box flexDirection="column">
-      <Box>
-        <BigText text="YOUTUBE DOWNLOAD"></BigText>
-      </Box>
-      <Box>
-        <Form {...main().formProps()} onSubmit={obj => main().onDownload(obj as { url: string; path: string })} />
-      </Box>
-    </Box>
-  ),
+type State = { url: string; path: string }
 
-  formProps: () =>
+const mainNS = ns('main', {
+  Main: () => {
+    const [url, setUrl] = useAtom(mainNS().url$)
+    const [path, setPath] = useAtom(mainNS().path$)
+
+    return (
+      <Box flexDirection="column">
+        <Box>
+          <BigText text="YOUTUBE DOWNLOAD"></BigText>
+        </Box>
+        <Box>
+          <Form
+            {...mainNS().formProps({ url, path }, { setUrl, setPath })}
+            onSubmit={obj => mainNS().onDownload(obj as State)}
+          />
+        </Box>
+      </Box>
+    )
+  },
+
+  formProps: (
+    { url, path }: State,
+    {
+      setUrl,
+      setPath,
+    }: { setUrl: (update: SetStateAction<string>) => void; setPath: (update: SetStateAction<string>) => void }
+  ) =>
     ({
+      onChange: (state: State) => {
+        setUrl(() => state.url)
+        setPath(() => state.path)
+      },
       form: {
         title: 'Please setup form for downloading video from Youtube',
         sections: [
           {
+            title: '',
             fields: [
               {
                 type: 'string',
                 name: 'url',
                 label: 'Youtube URL',
                 regex: RegExp('^https://.*$'),
+                initialValue: url,
               },
               {
                 type: 'string',
                 name: 'path',
                 label: 'File location',
-                initialValue: `${process.cwd()}/video.mp4`,
+                initialValue: path || `${process.cwd()}/video.mp4`,
               },
             ],
           },
@@ -44,14 +67,18 @@ const main = ns('main', {
       },
     } as FormProps),
 
-  onDownload(obj: { url: string; path: string }) {
+  onDownload(obj: State) {
     yt(obj.url).pipe(fs.createWriteStream(obj.path))
   },
+
+  url$: atom(''),
+
+  path$: atom(''),
 })
 
 ;(async () => {
-  await main.ready
+  await mainNS.ready
 
-  const Main = main().Main
+  const Main = mainNS().Main
   render(<Main />)
 })()
