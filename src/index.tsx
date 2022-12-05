@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Box, render } from 'ink'
+import { Box, render, Text } from 'ink'
 import BigText from 'ink-big-text'
 import { ns } from 'repl-ns'
 import { Form, FormProps } from 'ink-form'
@@ -14,16 +14,21 @@ const mainNS = ns('main', {
   Main: () => {
     const [url, setUrl] = useAtom(mainNS().url$)
     const [path, setPath] = useAtom(mainNS().path$)
+    const [downloaded, setDownloaded] = useAtom(mainNS().downloaded$)
 
     return (
       <Box flexDirection="column">
         <Box>
           <BigText text="YOUTUBE DOWNLOAD"></BigText>
         </Box>
+        <Box marginBottom={1}>{downloaded ? <Text color={'green'}>✅ Video downloaded!</Text> : null}</Box>
         <Box>
           <Form
             {...mainNS().formProps({ url, path }, { setUrl, setPath })}
-            onSubmit={obj => mainNS().onDownload(obj as State)}
+            onSubmit={obj => {
+              setDownloaded(() => false)
+              mainNS().onDownload(obj as State, setDownloaded)
+            }}
           />
         </Box>
       </Box>
@@ -67,13 +72,17 @@ const mainNS = ns('main', {
       },
     } as FormProps),
 
-  onDownload(obj: State) {
-    yt(obj.url).pipe(fs.createWriteStream(obj.path))
+  onDownload(obj: State, setDownloaded: (update: SetStateAction<boolean>) => void) {
+    yt(obj.url)
+      .pipe(fs.createWriteStream(obj.path))
+      .on('finish', () => setDownloaded(() => true))
   },
 
   url$: atom(''),
 
   path$: atom(''),
+
+  downloaded$: atom(false),
 })
 
 ;(async () => {
