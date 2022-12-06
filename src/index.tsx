@@ -9,12 +9,14 @@ import yt from 'ytdl-core-muxer'
 import fs from 'fs'
 import { atom, SetStateAction, useAtom } from 'jotai'
 
-type State = { url: string; path: string }
+type State = { url: string; path: string; startTime: string; endTime: string }
 
 const mainNS = ns('main', {
   Main: () => {
     const [url, setUrl] = useAtom(mainNS().url$)
     const [path, setPath] = useAtom(mainNS().path$)
+    const [startTime, setStartTime] = useAtom(mainNS().startTime$)
+    const [endTime, setEndTime] = useAtom(mainNS().endTime$)
     const [downloaded, setDownloaded] = useAtom(mainNS().downloaded$)
     const [downloadInProgress, setDownloadInProgress] = useAtom(mainNS().downloadInProgress$)
     const [downloadError, setDownloadError] = useAtom(mainNS().downloadError$)
@@ -35,7 +37,7 @@ const mainNS = ns('main', {
         </Box>
         <Box>
           <Form
-            {...mainNS().formProps({ url, path }, { setUrl, setPath })}
+            {...mainNS().formProps({ url, path, startTime, endTime }, { setUrl, setPath, setStartTime, setEndTime })}
             onSubmit={obj => {
               setDownloaded(() => false)
               setDownloadInProgress(() => true)
@@ -48,16 +50,25 @@ const mainNS = ns('main', {
   },
 
   formProps: (
-    { url, path }: State,
+    { url, path, startTime, endTime }: State,
     {
       setUrl,
       setPath,
-    }: { setUrl: (update: SetStateAction<string>) => void; setPath: (update: SetStateAction<string>) => void }
+      setStartTime,
+      setEndTime,
+    }: {
+      setUrl: (update: SetStateAction<string>) => void
+      setPath: (update: SetStateAction<string>) => void
+      setStartTime: (update: SetStateAction<string>) => void
+      setEndTime: (update: SetStateAction<string>) => void
+    }
   ) =>
     ({
       onChange: (state: State) => {
         setUrl(() => state.url)
         setPath(() => state.path)
+        setStartTime(() => state.startTime)
+        setEndTime(() => state.endTime)
       },
       form: {
         title: 'Please setup form for downloading video from Youtube',
@@ -78,6 +89,20 @@ const mainNS = ns('main', {
                 label: 'File location',
                 initialValue: path || `${process.cwd()}/video.mp4`,
               },
+              {
+                type: 'string',
+                name: 'startTime',
+                label: 'Start time (optional)',
+                regex: RegExp('^\\d\\d:\\d\\d:\\d\\d$'),
+                initialValue: startTime,
+              },
+              {
+                type: 'string',
+                name: 'endTime',
+                label: 'End time (optional)',
+                regex: RegExp('^\\d\\d:\\d\\d:\\d\\d$'),
+                initialValue: endTime,
+              },
             ],
           },
         ],
@@ -96,7 +121,11 @@ const mainNS = ns('main', {
       setDownloadError: (update: SetStateAction<Error | null>) => void
     }
   ) {
-    yt(obj.url)
+    yt(obj.url, {
+      ffmpeg: ([] as string[])
+        .concat(obj.startTime ? ['-ss', obj.startTime, '-ss', obj.startTime] : [])
+        .concat(obj.endTime ? ['-to', obj.endTime, '-to', obj.endTime] : []),
+    })
       .on('error', err => {
         setDownloadInProgress(() => false)
         setDownloaded(() => false)
@@ -113,6 +142,10 @@ const mainNS = ns('main', {
   url$: atom(''),
 
   path$: atom(''),
+
+  startTime$: atom(''),
+
+  endTime$: atom(''),
 
   downloaded$: atom(false),
 
