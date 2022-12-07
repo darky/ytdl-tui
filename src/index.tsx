@@ -6,8 +6,14 @@ import { ns } from 'repl-ns'
 import { Form, FormProps } from 'ink-form'
 import Spinner from 'ink-spinner'
 import yt from 'ytdl-core-muxer'
-import fs from 'fs'
 import { atom, SetStateAction, useAtom } from 'jotai'
+import ffmpegPath from 'ffmpeg-static'
+import ffmpeg from 'fluent-ffmpeg'
+import fs from 'fs'
+import { copyFile, mkdtemp } from 'fs/promises'
+import { tmpdir } from 'os'
+
+if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 type State = { url: string; path: string; startTime: string; endTime: string }
 
@@ -109,7 +115,7 @@ const mainNS = ns('main', {
       },
     } as FormProps),
 
-  onDownload(
+  async onDownload(
     obj: State,
     {
       setDownloaded,
@@ -121,22 +127,48 @@ const mainNS = ns('main', {
       setDownloadError: (update: SetStateAction<Error | null>) => void
     }
   ) {
-    yt(obj.url, {
-      ffmpeg: ([] as string[])
-        .concat(obj.startTime ? ['-ss', obj.startTime, '-ss', obj.startTime] : [])
-        .concat(obj.endTime ? ['-to', obj.endTime, '-to', obj.endTime] : []),
-    })
-      .on('error', err => {
-        setDownloadInProgress(() => false)
-        setDownloaded(() => false)
-        setDownloadError(() => err)
-      })
-      .pipe(fs.createWriteStream(obj.path))
-      .on('finish', () => {
-        setDownloadInProgress(() => false)
-        setDownloaded(() => true)
-        setDownloadError(() => null)
-      })
+    const renderComplete = () => {
+      setDownloadInProgress(() => false)
+      setDownloaded(() => true)
+      setDownloadError(() => null)
+    }
+    const renderErr = (err: Error) => {
+      setDownloadInProgress(() => false)
+      setDownloaded(() => false)
+      setDownloadError(() => err)
+    }
+
+    try {
+      const temporaryFilePath = `${await mkdtemp(`${tmpdir()}/ytdl-tui-`)}/video.mp4`
+
+      yt(obj.url)
+        .on('error', err => renderErr(err))
+        .pipe(fs.createWriteStream(temporaryFilePath).on('error', err => renderErr(err)))
+        .on('finish', async () => {
+          try {
+            if (obj.startTime || obj.endTime) {
+              let ffmpegStream = ffmpeg(temporaryFilePath)
+              if (obj.startTime) {
+                ffmpegStream = ffmpegStream.setStartTime(obj.startTime)
+              }
+              if (obj.endTime) {
+                ffmpegStream = ffmpegStream.setDuration(obj.endTime)
+              }
+              ffmpegStream
+                .saveToFile(obj.path)
+                .on('error', err => renderErr(err))
+                .on('end', () => renderComplete())
+            } else {
+              await copyFile(temporaryFilePath, obj.path)
+              renderComplete()
+            }
+          } catch (err) {
+            renderErr(err as Error)
+          }
+        })
+    } catch (err) {
+      renderErr(err as Error)
+    }
   },
 
   url$: atom(''),
