@@ -17,7 +17,7 @@ if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 type State = { url: string; path: string; startTime: string; endTime: string }
 
-const mainNS = ns('main', {
+export const mainNS = ns('main', {
   Main: () => {
     const [url, setUrl] = useAtom(mainNS().url$)
     const [path, setPath] = useAtom(mainNS().path$)
@@ -152,20 +152,7 @@ const mainNS = ns('main', {
                 ffmpegStream = ffmpegStream.setStartTime(obj.startTime)
               }
               if (obj.endTime) {
-                const startSec = obj.startTime
-                  ? (() => {
-                      const [hh = 0, mm = 0, ss = 0] = obj.startTime.split(':').map(Number)
-                      return ss + mm * 60 + hh * 60 * 60
-                    })()
-                  : 0
-                const endSec = (() => {
-                  const [hh = 0, mm = 0, ss = 0] = obj.endTime.split(':').map(Number)
-                  return ss + mm * 60 + hh * 60 * 60
-                })()
-                if (endSec - startSec <= 0) {
-                  throw new Error("End time can't be less than start time")
-                }
-                ffmpegStream = ffmpegStream.setDuration(endSec - startSec)
+                ffmpegStream = ffmpegStream.setDuration(mainNS().calcDuration(obj))
               }
               ffmpegStream
                 .saveToFile(obj.path)
@@ -184,6 +171,23 @@ const mainNS = ns('main', {
     }
   },
 
+  calcDuration(obj: State) {
+    const startSec = mainNS().time2Seconds(obj.startTime)
+    const endSec = mainNS().time2Seconds(obj.endTime)
+    const duration = endSec - startSec
+
+    if (duration <= 0) {
+      throw new Error("End time can't be less than start time")
+    }
+
+    return duration
+  },
+
+  time2Seconds(time: string) {
+    const [hh = 0, mm = 0, ss = 0] = (time ?? '').split(':').map(Number)
+    return ss + mm * 60 + hh * 60 * 60
+  },
+
   url$: atom(''),
 
   path$: atom(''),
@@ -199,9 +203,11 @@ const mainNS = ns('main', {
   downloadError$: atom<Error | null>(null),
 })
 
-;(async () => {
-  await mainNS.ready
+if (process.env['NODE_ENV'] !== 'test') {
+  ;(async () => {
+    await mainNS.ready
 
-  const Main = mainNS().Main
-  render(<Main />)
-})()
+    const Main = mainNS().Main
+    render(<Main />)
+  })()
+}

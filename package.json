@@ -7,15 +7,16 @@
     "url": "git://github.com/darky/ytdl-tui.git"
   },
   "files": [
-    "dist/index.js"
+    "dist/src/*.js"
   ],
   "bin": {
-    "ytdl-tui": "./dist/index.js"
+    "ytdl-tui": "./dist/src/index.js"
   },
   "scripts": {
-    "build": "rm -rf dist && npx tsc && sed -i '1 i #!/usr/bin/env node' dist/index.js && chmod +x dist/index.js",
+    "build": "rm -rf dist && npx tsc && npx tsc-alias && sed -i '1 i #!/usr/bin/env node' dist/src/index.js && chmod +x dist/src/index.js",
     "dev": "node --inspect -r ts-node/register/transpile-only -r tsconfig-paths/register src/index.tsx",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "npm run build && NODE_ENV=test node dist/test/test.js"
   },
   "keywords": [
     "youtube",
@@ -46,6 +47,7 @@
     "node-remote-repl": "1.1.0",
     "prettier": "2.8.0",
     "ts-node": "10.9.1",
+    "tsc-alias": "1.8.2",
     "tsconfig-paths": "4.1.1",
     "typescript": "4.9.3",
     "uvu": "0.5.6"
