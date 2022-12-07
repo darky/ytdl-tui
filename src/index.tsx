@@ -45,6 +45,7 @@ export const mainNS = ns('main', {
           <Form
             {...mainNS().formProps({ url, path, startTime, endTime }, { setUrl, setPath, setStartTime, setEndTime })}
             onSubmit={obj => {
+              setDownloadError(() => null)
               setDownloaded(() => false)
               setDownloadInProgress(() => true)
               mainNS().onDownload(obj as State, { setDownloaded, setDownloadInProgress, setDownloadError })
