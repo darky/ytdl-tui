@@ -35,7 +35,6 @@
     "jotai": "^1.11.0",
     "react": "^17.0.2",
     "repl-ns": "^0.0.15",
-    "rocket-pipes-slim": "^0.11.0",
     "ytdl-core-muxer": "darky/ytdl-core-muxer#656c57f38faa3db1338319765361c9d4db694157"
   },
   "devDependencies": {
