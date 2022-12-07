@@ -16,4 +16,5 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm ci
+      - run: npx prettier --check "{src/*.ts,test/*.ts}"
       - run: npm run test
