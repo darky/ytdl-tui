@@ -152,7 +152,20 @@ const mainNS = ns('main', {
                 ffmpegStream = ffmpegStream.setStartTime(obj.startTime)
               }
               if (obj.endTime) {
-                ffmpegStream = ffmpegStream.setDuration(obj.endTime)
+                const startSec = obj.startTime
+                  ? (() => {
+                      const [hh = 0, mm = 0, ss = 0] = obj.startTime.split(':').map(Number)
+                      return ss + mm * 60 + hh * 60 * 60
+                    })()
+                  : 0
+                const endSec = (() => {
+                  const [hh = 0, mm = 0, ss = 0] = obj.endTime.split(':').map(Number)
+                  return ss + mm * 60 + hh * 60 * 60
+                })()
+                if (endSec - startSec <= 0) {
+                  throw new Error("End time can't be less than start time")
+                }
+                ffmpegStream = ffmpegStream.setDuration(endSec - startSec)
               }
               ffmpegStream
                 .saveToFile(obj.path)
