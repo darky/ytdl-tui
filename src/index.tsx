@@ -15,7 +15,7 @@ import { tmpdir } from 'os'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
-type State = { url: string; path: string; startTime: string; endTime: string }
+type State = { url: string; path: string; startTime: string; endTime: string; resolution: 'highest' | '720' | '360' }
 
 export const mainNS = ns('main', {
   Main: () => {
@@ -26,6 +26,7 @@ export const mainNS = ns('main', {
     const [downloaded, setDownloaded] = useAtom(mainNS().downloaded$)
     const [downloadInProgress, setDownloadInProgress] = useAtom(mainNS().downloadInProgress$)
     const [downloadError, setDownloadError] = useAtom(mainNS().downloadError$)
+    const [resolution, setResolution] = useAtom(mainNS().resolution$)
 
     return (
       <Box flexDirection="column">
@@ -43,7 +44,10 @@ export const mainNS = ns('main', {
         </Box>
         <Box>
           <Form
-            {...mainNS().formProps({ url, path, startTime, endTime }, { setUrl, setPath, setStartTime, setEndTime })}
+            {...mainNS().formProps(
+              { url, path, startTime, endTime, resolution },
+              { setUrl, setPath, setStartTime, setEndTime, setResolution }
+            )}
             onSubmit={obj => {
               setDownloadError(() => null)
               setDownloaded(() => false)
@@ -57,17 +61,19 @@ export const mainNS = ns('main', {
   },
 
   formProps: (
-    { url, path, startTime, endTime }: State,
+    { url, path, startTime, endTime, resolution }: State,
     {
       setUrl,
       setPath,
       setStartTime,
       setEndTime,
+      setResolution,
     }: {
       setUrl: (update: SetStateAction<string>) => void
       setPath: (update: SetStateAction<string>) => void
       setStartTime: (update: SetStateAction<string>) => void
       setEndTime: (update: SetStateAction<string>) => void
+      setResolution: (update: SetStateAction<State['resolution']>) => void
     }
   ) =>
     ({
@@ -76,6 +82,7 @@ export const mainNS = ns('main', {
         setPath(() => state.path)
         setStartTime(() => state.startTime)
         setEndTime(() => state.endTime)
+        setResolution(() => state.resolution)
       },
       form: {
         title: 'Please setup form for downloading video from Youtube',
@@ -109,6 +116,17 @@ export const mainNS = ns('main', {
                 label: 'End time (optional)',
                 regex: RegExp('(^\\d\\d:\\d\\d:\\d\\d$|^$)'),
                 initialValue: endTime,
+              },
+              {
+                type: 'select',
+                name: 'resolution',
+                label: 'Resolution',
+                initialValue: resolution ?? 'highest',
+                options: [
+                  { label: 'highest', value: 'highest' },
+                  { label: '720', value: '720' },
+                  { label: '360', value: '360' },
+                ],
               },
             ],
           },
@@ -154,6 +172,9 @@ export const mainNS = ns('main', {
               }
               if (obj.endTime) {
                 ffmpegStream = ffmpegStream.setDuration(mainNS().calcDuration(obj))
+              }
+              if (obj.resolution !== 'highest') {
+                ffmpegStream = ffmpegStream.size(`?x${obj.resolution}`)
               }
               ffmpegStream
                 .saveToFile(obj.path)
@@ -202,6 +223,8 @@ export const mainNS = ns('main', {
   downloadInProgress$: atom(false),
 
   downloadError$: atom<Error | null>(null),
+
+  resolution$: atom<State['resolution']>('highest'),
 })
 
 if (process.env['NODE_ENV'] !== 'test') {
