@@ -1,6 +1,6 @@
 {
   "name": "ytdl-tui",
-  "version": "0.9.23",
+  "version": "0.9.30",
   "description": "TUI for downloading Youtube videos",
   "repository": {
     "type": "git",
