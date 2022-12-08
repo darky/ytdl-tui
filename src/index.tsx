@@ -6,12 +6,13 @@ import { ns } from 'repl-ns'
 import { Form, FormProps } from 'ink-form'
 import Spinner from 'ink-spinner'
 import yt from 'ytdl-core-muxer'
-import { atom, SetStateAction, useAtom } from 'jotai'
 import ffmpegPath from 'ffmpeg-static'
 import ffmpeg from 'fluent-ffmpeg'
 import fs from 'fs'
 import { copyFile, mkdtemp } from 'fs/promises'
 import { tmpdir } from 'os'
+import { atom } from 'nanostores-cjs'
+import { useStore } from 'src/useStore'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
@@ -19,14 +20,14 @@ type State = { url: string; path: string; startTime: string; endTime: string; re
 
 export const mainNS = ns('main', {
   Main: () => {
-    const [url, setUrl] = useAtom(mainNS().url$)
-    const [path, setPath] = useAtom(mainNS().path$)
-    const [startTime, setStartTime] = useAtom(mainNS().startTime$)
-    const [endTime, setEndTime] = useAtom(mainNS().endTime$)
-    const [downloaded, setDownloaded] = useAtom(mainNS().downloaded$)
-    const [downloadInProgress, setDownloadInProgress] = useAtom(mainNS().downloadInProgress$)
-    const [downloadError, setDownloadError] = useAtom(mainNS().downloadError$)
-    const [resolution, setResolution] = useAtom(mainNS().resolution$)
+    const url = useStore(mainNS().url$)
+    const path = useStore(mainNS().path$)
+    const startTime = useStore(mainNS().startTime$)
+    const endTime = useStore(mainNS().endTime$)
+    const downloaded = useStore(mainNS().downloaded$)
+    const downloadInProgress = useStore(mainNS().downloadInProgress$)
+    const downloadError = useStore(mainNS().downloadError$)
+    const resolution = useStore(mainNS().resolution$)
 
     return (
       <Box flexDirection="column">
@@ -44,15 +45,12 @@ export const mainNS = ns('main', {
         </Box>
         <Box>
           <Form
-            {...mainNS().formProps(
-              { url, path, startTime, endTime, resolution },
-              { setUrl, setPath, setStartTime, setEndTime, setResolution }
-            )}
-            onSubmit={obj => {
-              setDownloadError(() => null)
-              setDownloaded(() => false)
-              setDownloadInProgress(() => true)
-              mainNS().onDownload(obj as State, { setDownloaded, setDownloadInProgress, setDownloadError })
+            {...mainNS().formProps({ url, path, startTime, endTime, resolution })}
+            onSubmit={state => {
+              mainNS().downloadError$.set(null)
+              mainNS().downloaded$.set(false)
+              mainNS().downloadInProgress$.set(true)
+              mainNS().onDownload(state as State)
             }}
           />
         </Box>
@@ -60,29 +58,14 @@ export const mainNS = ns('main', {
     )
   },
 
-  formProps: (
-    { url, path, startTime, endTime, resolution }: State,
-    {
-      setUrl,
-      setPath,
-      setStartTime,
-      setEndTime,
-      setResolution,
-    }: {
-      setUrl: (update: SetStateAction<string>) => void
-      setPath: (update: SetStateAction<string>) => void
-      setStartTime: (update: SetStateAction<string>) => void
-      setEndTime: (update: SetStateAction<string>) => void
-      setResolution: (update: SetStateAction<State['resolution']>) => void
-    }
-  ) =>
+  formProps: ({ url, path, startTime, endTime, resolution }: State) =>
     ({
       onChange: (state: State) => {
-        setUrl(() => state.url)
-        setPath(() => state.path)
-        setStartTime(() => state.startTime)
-        setEndTime(() => state.endTime)
-        setResolution(() => state.resolution)
+        mainNS().url$.set(state.url)
+        mainNS().path$.set(state.path)
+        mainNS().startTime$.set(state.startTime)
+        mainNS().endTime$.set(state.endTime)
+        mainNS().resolution$.set(state.resolution)
       },
       form: {
         title: 'Please setup form for downloading video from Youtube',
@@ -134,54 +117,43 @@ export const mainNS = ns('main', {
       },
     } as FormProps),
 
-  async onDownload(
-    obj: State,
-    {
-      setDownloaded,
-      setDownloadInProgress,
-      setDownloadError,
-    }: {
-      setDownloaded: (update: SetStateAction<boolean>) => void
-      setDownloadInProgress: (update: SetStateAction<boolean>) => void
-      setDownloadError: (update: SetStateAction<Error | null>) => void
-    }
-  ) {
+  async onDownload(state: State) {
     const renderComplete = () => {
-      setDownloadInProgress(() => false)
-      setDownloaded(() => true)
-      setDownloadError(() => null)
+      mainNS().downloadInProgress$.set(false)
+      mainNS().downloaded$.set(true)
+      mainNS().downloadError$.set(null)
     }
     const renderErr = (err: Error) => {
-      setDownloadInProgress(() => false)
-      setDownloaded(() => false)
-      setDownloadError(() => err)
+      mainNS().downloadInProgress$.set(false)
+      mainNS().downloaded$.set(false)
+      mainNS().downloadError$.set(err)
     }
 
     try {
       const temporaryFilePath = `${await mkdtemp(`${tmpdir()}/ytdl-tui-`)}/video.mp4`
 
-      yt(obj.url)
+      yt(state.url)
         .on('error', err => renderErr(err))
         .pipe(fs.createWriteStream(temporaryFilePath).on('error', err => renderErr(err)))
         .on('finish', async () => {
           try {
-            if (obj.startTime || obj.endTime) {
+            if (state.startTime || state.endTime) {
               let ffmpegStream = ffmpeg(temporaryFilePath)
-              if (obj.startTime) {
-                ffmpegStream = ffmpegStream.setStartTime(obj.startTime)
+              if (state.startTime) {
+                ffmpegStream = ffmpegStream.setStartTime(state.startTime)
               }
-              if (obj.endTime) {
-                ffmpegStream = ffmpegStream.setDuration(mainNS().calcDuration(obj))
+              if (state.endTime) {
+                ffmpegStream = ffmpegStream.setDuration(mainNS().calcDuration(state))
               }
-              if (obj.resolution !== 'highest') {
-                ffmpegStream = ffmpegStream.size(`?x${obj.resolution}`)
+              if (state.resolution !== 'highest') {
+                ffmpegStream = ffmpegStream.size(`?x${state.resolution}`)
               }
               ffmpegStream
-                .saveToFile(obj.path)
+                .saveToFile(state.path)
                 .on('error', err => renderErr(err))
                 .on('end', () => renderComplete())
             } else {
-              await copyFile(temporaryFilePath, obj.path)
+              await copyFile(temporaryFilePath, state.path)
               renderComplete()
             }
           } catch (err) {
@@ -193,9 +165,9 @@ export const mainNS = ns('main', {
     }
   },
 
-  calcDuration(obj: State) {
-    const startSec = mainNS().time2Seconds(obj.startTime)
-    const endSec = mainNS().time2Seconds(obj.endTime)
+  calcDuration(state: State) {
+    const startSec = mainNS().time2Seconds(state.startTime)
+    const endSec = mainNS().time2Seconds(state.endTime)
     const duration = endSec - startSec
 
     if (duration <= 0) {
