@@ -8,6 +8,7 @@ test('calcDuration seconds', () => {
     endTime: '00:00:25',
     path: '',
     url: '',
+    resolution: 'highest',
   })
   assert.strictEqual(duration, 15)
 })
@@ -18,6 +19,7 @@ test('calcDuration minutes', () => {
     endTime: '00:01:25',
     path: '',
     url: '',
+    resolution: 'highest',
   })
   assert.strictEqual(duration, 75)
 })
@@ -28,6 +30,7 @@ test('calcDuration hours', () => {
     endTime: '01:01:25',
     path: '',
     url: '',
+    resolution: 'highest',
   })
   assert.strictEqual(duration, 3675)
 })
@@ -38,6 +41,7 @@ test('calcDuration without startTime', () => {
     endTime: '01:00:01',
     path: '',
     url: '',
+    resolution: 'highest',
   })
   assert.strictEqual(duration, 3601)
 })
@@ -49,6 +53,7 @@ test('calcDuration error when startTime == endTime', () => {
       endTime: '01:00:01',
       path: '',
       url: '',
+      resolution: 'highest',
     })
   )
 })
@@ -60,6 +65,7 @@ test('calcDuration error when startTime > endTime', () => {
       endTime: '01:00:01',
       path: '',
       url: '',
+      resolution: 'highest',
     })
   )
 })
