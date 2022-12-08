@@ -2,7 +2,9 @@
 
 TUI for downloading Youtube videos
 
-<!-- ### Screenshots -->
+### Screenshot
+
+![image](https://user-images.githubusercontent.com/1832800/206461019-e9530e9c-3949-448f-af74-8e22586e6f4b.png)
 
 ### Install
 
