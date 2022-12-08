@@ -124,8 +124,8 @@ export const mainNS = ns('main', {
                 initialValue: resolution ?? 'highest',
                 options: [
                   { label: 'highest', value: 'highest' },
-                  { label: '720', value: '720' },
-                  { label: '360', value: '360' },
+                  { label: '720p', value: '720' },
+                  { label: '360p', value: '360' },
                 ],
               },
             ],
