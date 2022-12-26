@@ -1,4 +1,4 @@
-import yt from 'ytdl-core-muxer'
+import yt from 'ytdl-core-muxer-by-darky'
 import ffmpeg from 'fluent-ffmpeg'
 import fs from 'fs'
 import { copyFile, mkdtemp } from 'fs/promises'

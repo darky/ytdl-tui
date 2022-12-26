@@ -35,7 +35,7 @@
     "nanostores-cjs": "^0.7.1",
     "react": "^17.0.2",
     "repl-ns": "^0.0.15",
-    "ytdl-core-muxer": "darky/ytdl-core-muxer#656c57f38faa3db1338319765361c9d4db694157"
+    "ytdl-core-muxer-by-darky": "^1.0.2"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "2.1.20",
