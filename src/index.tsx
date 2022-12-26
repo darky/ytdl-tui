@@ -42,13 +42,14 @@ export const indexNS = ns(
 
     async after(payload) {
       if (process.env['NODE_ENV'] === 'test') {
-        // for tests not render again UI
-        // but freeze libuv via setTimeout
-        return setTimeout(() => {}, 1000 * 60 * 60)
+        // for tests not render UI again
+        // also freeze node.js via setTimeout for REPL driven development in tests
+        setTimeout(() => {}, 1000 * 60 * 60)
+        return
       }
 
       const Index = indexNS().Index
-      return Object.assign(payload, { instance: render(<Index />) })
+      payload.instance = render(<Index />)
     },
   }
 )
