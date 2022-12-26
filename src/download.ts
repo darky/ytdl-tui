@@ -7,6 +7,9 @@ import { atom } from 'nanostores-cjs'
 import type { State } from 'src/types'
 import { ns } from 'repl-ns'
 import { durationNS } from 'src/duration'
+import ffmpegPath from 'ffmpeg-static'
+
+if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 export const downloadNS = ns('download', {
   async onDownload(state: State) {

@@ -3,13 +3,11 @@ import * as React from 'react'
 import { Box, Instance, render } from 'ink'
 import BigText from 'ink-big-text'
 import { ns } from 'repl-ns'
-import ffmpegPath from 'ffmpeg-static'
+
 import { formNS } from 'src/form'
 import { statusNS } from 'src/status'
 
 // process.env['NODE_ENV'] = 'test'
-
-if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 export const indexNS = ns(
   'index',
