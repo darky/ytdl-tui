@@ -10,31 +10,23 @@ import { durationNS } from 'src/duration'
 
 export const downloadNS = ns('download', {
   async onDownload(state: State) {
-    const renderComplete = () => {
-      downloadNS().downloadInProgress$.set(false)
-      downloadNS().downloaded$.set(true)
-      downloadNS().downloadError$.set(null)
-    }
-    const renderErr = (err: Error) => {
-      downloadNS().downloadInProgress$.set(false)
-      downloadNS().downloaded$.set(false)
-      downloadNS().downloadError$.set(err)
-    }
-
-    downloadNS().downloadError$.set(null)
-    downloadNS().downloaded$.set(false)
-    downloadNS().downloadInProgress$.set(true)
+    downloadNS().renderInProgress()
 
     try {
-      const temporaryFilePath = `${await mkdtemp(`${tmpdir()}/ytdl-tui-`)}/video.mp4`
+      const temporaryFilePath = await downloadNS().createTempFilePath()
 
-      yt(state.url)
-        .on('error', err => renderErr(err))
-        .pipe(fs.createWriteStream(temporaryFilePath).on('error', err => renderErr(err)))
+      downloadNS()
+        .youtubeDownload(state.url)
+        .on('error', err => downloadNS().renderErr(err))
+        .pipe(
+          downloadNS()
+            .writeTempFile(temporaryFilePath)
+            .on('error', err => downloadNS().renderErr(err))
+        )
         .on('finish', async () => {
           try {
             if (state.startTime || state.endTime) {
-              let ffmpegStream = ffmpeg(temporaryFilePath)
+              let ffmpegStream = downloadNS().createFfmpeg(temporaryFilePath)
               if (state.startTime) {
                 ffmpegStream = ffmpegStream.setStartTime(state.startTime)
               }
@@ -46,19 +38,57 @@ export const downloadNS = ns('download', {
               }
               ffmpegStream
                 .saveToFile(state.path)
-                .on('error', err => renderErr(err))
-                .on('end', () => renderComplete())
+                .on('error', err => downloadNS().renderErr(err))
+                .on('end', () => downloadNS().renderComplete())
             } else {
-              await copyFile(temporaryFilePath, state.path)
-              renderComplete()
+              await downloadNS().cpFile(temporaryFilePath, state.path)
+              downloadNS().renderComplete()
             }
           } catch (err) {
-            renderErr(err as Error)
+            downloadNS().renderErr(err as Error)
           }
         })
     } catch (err) {
-      renderErr(err as Error)
+      downloadNS().renderErr(err as Error)
     }
+  },
+
+  async createTempFilePath() {
+    return `${await mkdtemp(`${tmpdir()}/ytdl-tui-`)}/video.mp4`
+  },
+
+  youtubeDownload(url: string) {
+    return yt(url)
+  },
+
+  writeTempFile(path: string) {
+    return fs.createWriteStream(path)
+  },
+
+  createFfmpeg(path: string) {
+    return ffmpeg(path)
+  },
+
+  async cpFile(from: string, to: string) {
+    await copyFile(from, to)
+  },
+
+  renderComplete() {
+    downloadNS().downloadInProgress$.set(false)
+    downloadNS().downloaded$.set(true)
+    downloadNS().downloadError$.set(null)
+  },
+
+  renderErr(err: Error) {
+    downloadNS().downloadInProgress$.set(false)
+    downloadNS().downloaded$.set(false)
+    downloadNS().downloadError$.set(err)
+  },
+
+  renderInProgress() {
+    downloadNS().downloadError$.set(null)
+    downloadNS().downloaded$.set(false)
+    downloadNS().downloadInProgress$.set(true)
   },
 
   downloaded$: atom(false),
