@@ -33,6 +33,7 @@
     "ink-form": "^1.0.2",
     "ink-spinner": "^4.0.3",
     "nanostores-cjs": "^0.7.1",
+    "p-event": "^4.2.0",
     "react": "^17.0.2",
     "repl-ns": "^0.0.15",
     "ytdl-core-muxer-by-darky": "^1.0.2"
