@@ -25,7 +25,7 @@ export const downloadNS = ns('download', {
         )
         .on('finish', async () => {
           try {
-            if (state.startTime || state.endTime) {
+            if (state.startTime || state.endTime || state.resolution !== 'highest') {
               let ffmpegStream = downloadNS().createFfmpeg(temporaryFilePath)
               if (state.startTime) {
                 ffmpegStream = ffmpegStream.setStartTime(state.startTime)
