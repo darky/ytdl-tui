@@ -1,11 +1,13 @@
 import * as React from 'react'
 
-import { Box, render } from 'ink'
+import { Box, Instance, render } from 'ink'
 import BigText from 'ink-big-text'
 import { ns } from 'repl-ns'
 import ffmpegPath from 'ffmpeg-static'
 import { formNS } from 'src/form'
 import { statusNS } from 'src/status'
+
+// process.env['NODE_ENV'] = 'test'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
@@ -30,13 +32,23 @@ export const indexNS = ns(
         </Box>
       )
     },
+
+    instance: null as null | Instance,
   },
   {
-    async after() {
-      if (process.env['NODE_ENV'] === 'test') return
+    async before(payload) {
+      payload?.instance?.unmount()
+    },
+
+    async after(payload) {
+      if (process.env['NODE_ENV'] === 'test') {
+        // for tests not render again UI
+        // but freeze libuv via setTimeout
+        return setTimeout(() => {}, 1000 * 60 * 60)
+      }
 
       const Index = indexNS().Index
-      render(<Index />)
+      return Object.assign(payload, { instance: render(<Index />) })
     },
   }
 )
