@@ -1,9 +1,9 @@
 import { test } from 'uvu'
-import { mainNS } from 'src/index'
+import { indexNS } from 'src/index'
 import assert from 'assert'
 
 test('calcDuration seconds', () => {
-  const duration = mainNS().calcDuration({
+  const duration = indexNS().calcDuration({
     startTime: '00:00:10',
     endTime: '00:00:25',
     path: '',
@@ -14,7 +14,7 @@ test('calcDuration seconds', () => {
 })
 
 test('calcDuration minutes', () => {
-  const duration = mainNS().calcDuration({
+  const duration = indexNS().calcDuration({
     startTime: '00:00:10',
     endTime: '00:01:25',
     path: '',
@@ -25,7 +25,7 @@ test('calcDuration minutes', () => {
 })
 
 test('calcDuration hours', () => {
-  const duration = mainNS().calcDuration({
+  const duration = indexNS().calcDuration({
     startTime: '00:00:10',
     endTime: '01:01:25',
     path: '',
@@ -36,7 +36,7 @@ test('calcDuration hours', () => {
 })
 
 test('calcDuration without startTime', () => {
-  const duration = mainNS().calcDuration({
+  const duration = indexNS().calcDuration({
     startTime: '',
     endTime: '01:00:01',
     path: '',
@@ -48,7 +48,7 @@ test('calcDuration without startTime', () => {
 
 test('calcDuration error when startTime == endTime', () => {
   assert.throws(() =>
-    mainNS().calcDuration({
+    indexNS().calcDuration({
       startTime: '01:00:01',
       endTime: '01:00:01',
       path: '',
@@ -60,7 +60,7 @@ test('calcDuration error when startTime == endTime', () => {
 
 test('calcDuration error when startTime > endTime', () => {
   assert.throws(() =>
-    mainNS().calcDuration({
+    indexNS().calcDuration({
       startTime: '01:01:01',
       endTime: '01:00:01',
       path: '',

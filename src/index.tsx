@@ -18,18 +18,18 @@ if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 type State = { url: string; path: string; startTime: string; endTime: string; resolution: 'highest' | '720' | '360' }
 
-export const mainNS = ns(
-  'main',
+export const indexNS = ns(
+  'index',
   {
-    Main: () => {
-      const url = useStore(mainNS().url$)
-      const path = useStore(mainNS().path$)
-      const startTime = useStore(mainNS().startTime$)
-      const endTime = useStore(mainNS().endTime$)
-      const downloaded = useStore(mainNS().downloaded$)
-      const downloadInProgress = useStore(mainNS().downloadInProgress$)
-      const downloadError = useStore(mainNS().downloadError$)
-      const resolution = useStore(mainNS().resolution$)
+    Index: () => {
+      const url = useStore(indexNS().url$)
+      const path = useStore(indexNS().path$)
+      const startTime = useStore(indexNS().startTime$)
+      const endTime = useStore(indexNS().endTime$)
+      const downloaded = useStore(indexNS().downloaded$)
+      const downloadInProgress = useStore(indexNS().downloadInProgress$)
+      const downloadError = useStore(indexNS().downloadError$)
+      const resolution = useStore(indexNS().resolution$)
 
       return (
         <Box flexDirection="column">
@@ -47,12 +47,12 @@ export const mainNS = ns(
           </Box>
           <Box>
             <Form
-              {...mainNS().formProps({ url, path, startTime, endTime, resolution })}
+              {...indexNS().formProps({ url, path, startTime, endTime, resolution })}
               onSubmit={state => {
-                mainNS().downloadError$.set(null)
-                mainNS().downloaded$.set(false)
-                mainNS().downloadInProgress$.set(true)
-                mainNS().onDownload(state as State)
+                indexNS().downloadError$.set(null)
+                indexNS().downloaded$.set(false)
+                indexNS().downloadInProgress$.set(true)
+                indexNS().onDownload(state as State)
               }}
             />
           </Box>
@@ -63,11 +63,11 @@ export const mainNS = ns(
     formProps: ({ url, path, startTime, endTime, resolution }: State) =>
       ({
         onChange: (state: State) => {
-          mainNS().url$.set(state.url)
-          mainNS().path$.set(state.path)
-          mainNS().startTime$.set(state.startTime)
-          mainNS().endTime$.set(state.endTime)
-          mainNS().resolution$.set(state.resolution)
+          indexNS().url$.set(state.url)
+          indexNS().path$.set(state.path)
+          indexNS().startTime$.set(state.startTime)
+          indexNS().endTime$.set(state.endTime)
+          indexNS().resolution$.set(state.resolution)
         },
         form: {
           title: 'Please setup form for downloading video from Youtube',
@@ -121,14 +121,14 @@ export const mainNS = ns(
 
     async onDownload(state: State) {
       const renderComplete = () => {
-        mainNS().downloadInProgress$.set(false)
-        mainNS().downloaded$.set(true)
-        mainNS().downloadError$.set(null)
+        indexNS().downloadInProgress$.set(false)
+        indexNS().downloaded$.set(true)
+        indexNS().downloadError$.set(null)
       }
       const renderErr = (err: Error) => {
-        mainNS().downloadInProgress$.set(false)
-        mainNS().downloaded$.set(false)
-        mainNS().downloadError$.set(err)
+        indexNS().downloadInProgress$.set(false)
+        indexNS().downloaded$.set(false)
+        indexNS().downloadError$.set(err)
       }
 
       try {
@@ -145,7 +145,7 @@ export const mainNS = ns(
                   ffmpegStream = ffmpegStream.setStartTime(state.startTime)
                 }
                 if (state.endTime) {
-                  ffmpegStream = ffmpegStream.setDuration(mainNS().calcDuration(state))
+                  ffmpegStream = ffmpegStream.setDuration(indexNS().calcDuration(state))
                 }
                 if (state.resolution !== 'highest') {
                   ffmpegStream = ffmpegStream.size(`?x${state.resolution}`)
@@ -168,8 +168,8 @@ export const mainNS = ns(
     },
 
     calcDuration(state: State) {
-      const startSec = mainNS().time2Seconds(state.startTime)
-      const endSec = mainNS().time2Seconds(state.endTime)
+      const startSec = indexNS().time2Seconds(state.startTime)
+      const endSec = indexNS().time2Seconds(state.endTime)
       const duration = endSec - startSec
 
       if (duration <= 0) {
@@ -204,8 +204,8 @@ export const mainNS = ns(
     async after() {
       if (process.env['NODE_ENV'] === 'test') return
 
-      const Main = mainNS().Main
-      render(<Main />)
+      const Index = indexNS().Index
+      render(<Index />)
     },
   }
 )
