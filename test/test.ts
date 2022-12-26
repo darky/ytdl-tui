@@ -1,3 +1,4 @@
+import 'test/download'
 import 'test/duration'
 import 'test/status'
 import { test } from 'uvu'
