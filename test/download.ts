@@ -74,7 +74,7 @@ test('set in progress, when call onDownload', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
 })
 
@@ -88,7 +88,7 @@ test('set completed, when onDownload called without settings', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
 })
 
@@ -104,7 +104,7 @@ test('set error, when something wrong with temp file creation', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
   assert.strictEqual((s.args[0] as any)[0].name, 'err')
 })
@@ -125,7 +125,7 @@ test('set error, when something wrong with youtube download', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
   assert.strictEqual((s.args[0] as any)[0], 'err')
 })
@@ -147,7 +147,7 @@ test('should call youtube with url', async () => {
     resolution: 'highest',
     url: 'test-url',
   })
-  await setTimeout(10)
+
   assert.strictEqual(url, 'test-url')
 })
 
@@ -167,7 +167,7 @@ test('set error, when something wrong with file writing to fs', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+  await setTimeout(1)
   assert.strictEqual(s.callCount, 1)
   assert.strictEqual((s.args[0] as any)[0], 'err')
 })
@@ -188,7 +188,7 @@ test('should copy file from temporary for basic settings', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
   assert.strictEqual(from, 'test-temp-path')
   assert.strictEqual(to, 'to-test')
@@ -204,7 +204,7 @@ test('set completed, when onDownload called with settings', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
 })
 
@@ -238,7 +238,7 @@ test('set error, when something wrong with ffmpeg saving file', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(s.callCount, 1)
   assert.strictEqual((s.args[0] as any)[0], 'err')
 })
@@ -274,7 +274,7 @@ test('should set ffmpeg start time', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(time, '00:00:00')
 })
 
@@ -309,7 +309,7 @@ test('should set ffmpeg duration', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(duration, 6)
 })
 
@@ -344,6 +344,6 @@ test('should set ffmpeg size', async () => {
     resolution: '360',
     url: '',
   })
-  await setTimeout(10)
+
   assert.strictEqual(size, '?x360')
 })
