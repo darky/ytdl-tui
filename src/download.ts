@@ -14,7 +14,7 @@ if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 export const downloadNS = ns('download', {
   async onDownload(state: State) {
-    downloadNS().renderInProgress()
+    downloadNS().renderDownloading()
 
     try {
       const temporaryFilePath = await downloadNS().createTempFilePath()
@@ -28,16 +28,13 @@ export const downloadNS = ns('download', {
       )
 
       if (state.startTime || state.endTime || state.resolution !== 'highest') {
-        let ffmpegStream = downloadNS().createFfmpeg(temporaryFilePath)
-        if (state.startTime) {
-          ffmpegStream = ffmpegStream.setStartTime(state.startTime)
-        }
-        if (state.endTime) {
-          ffmpegStream = ffmpegStream.setDuration(durationNS().calcDuration(state))
-        }
-        if (state.resolution !== 'highest') {
-          ffmpegStream = ffmpegStream.size(`?x${state.resolution}`)
-        }
+        downloadNS().renderProcessing()
+
+        const ffmpegStream = await Promise.resolve(downloadNS().createFfmpeg(temporaryFilePath))
+          .then(ff => (state.startTime ? ff.setStartTime(state.startTime) : ff))
+          .then(ff => (state.endTime ? ff.setDuration(durationNS().calcDuration(state)) : ff))
+          .then(ff => (state.resolution === 'highest' ? ff : ff.size(`?x${state.resolution}`)))
+
         await pEvent(ffmpegStream.saveToFile(state.path), 'end')
       } else {
         await downloadNS().cpFile(temporaryFilePath, state.path)
@@ -77,11 +74,15 @@ export const downloadNS = ns('download', {
     downloadNS().downloadStatus$.set({ status: 'error', payload: err.message })
   },
 
-  renderInProgress() {
-    downloadNS().downloadStatus$.set({ status: 'in progress', payload: '' })
+  renderDownloading() {
+    downloadNS().downloadStatus$.set({ status: 'downloading', payload: '' })
   },
 
-  downloadStatus$: atom<{ status: 'nothing' | 'in progress' | 'error' | 'completed'; payload: string }>({
+  renderProcessing() {
+    downloadNS().downloadStatus$.set({ status: 'processing', payload: '' })
+  },
+
+  downloadStatus$: atom<{ status: 'nothing' | 'downloading' | 'processing' | 'error' | 'completed'; payload: string }>({
     status: 'nothing',
     payload: '',
   }),

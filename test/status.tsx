@@ -32,14 +32,27 @@ test('render downloaded status', () => {
   }
 })
 
-test('render in progress status', () => {
-  downloadNS().downloadStatus$.set({ status: 'in progress', payload: '' })
+test('render downloading status', () => {
+  downloadNS().downloadStatus$.set({ status: 'downloading', payload: '' })
 
   const Status = statusNS().Status
 
   const r = render(<Status />)
   try {
-    assert.match(r.lastFrame() ?? '', /▰▱▱▱▱▱▱/)
+    assert.match(r.lastFrame() ?? '', /Downloading/)
+  } finally {
+    r.unmount()
+  }
+})
+
+test('render downloading status', () => {
+  downloadNS().downloadStatus$.set({ status: 'processing', payload: '' })
+
+  const Status = statusNS().Status
+
+  const r = render(<Status />)
+  try {
+    assert.match(r.lastFrame() ?? '', /Processing/)
   } finally {
     r.unmount()
   }

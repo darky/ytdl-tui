@@ -14,7 +14,18 @@ export const statusNS = ns('status', {
     return (
       <>
         {match(downloadStatus)
-          .with({ status: 'in progress' }, () => <Spinner type="aesthetic" />)
+          .with({ status: 'downloading' }, () => (
+            <>
+              <Text>Downloading </Text>
+              <Spinner type="aesthetic" />
+            </>
+          ))
+          .with({ status: 'processing' }, () => (
+            <>
+              <Text>Processing </Text>
+              <Spinner type="arrow3" />
+            </>
+          ))
           .with({ status: 'completed' }, () => <Text color={'green'}>✅ Video downloaded!</Text>)
           .with({ status: 'error' }, ({ payload }) => <Text color={'red'}>{payload}</Text>)
           .with({ status: 'nothing' }, () => <></>)

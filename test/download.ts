@@ -50,10 +50,16 @@ test('complete state', () => {
   assert.strictEqual(downloadNS().downloadStatus$.get().status, 'completed')
 })
 
-test('in progress state', () => {
-  downloadNS().renderInProgress()
+test('downloading state', () => {
+  downloadNS().renderDownloading()
 
-  assert.strictEqual(downloadNS().downloadStatus$.get().status, 'in progress')
+  assert.strictEqual(downloadNS().downloadStatus$.get().status, 'downloading')
+})
+
+test('processing state', () => {
+  downloadNS().renderProcessing()
+
+  assert.strictEqual(downloadNS().downloadStatus$.get().status, 'processing')
 })
 
 test('error state', () => {
@@ -64,13 +70,27 @@ test('error state', () => {
   assert.strictEqual(downloadNS().downloadStatus$.get().payload, 'test')
 })
 
-test('set in progress, when call onDownload', async () => {
+test('set downloading, when call onDownload', async () => {
   const ns = downloadNS()
-  const s = sinon.stub(ns, 'renderInProgress')
+  const s = sinon.stub(ns, 'renderDownloading')
   await downloadNS().onDownload({
     path: '',
     startTime: '',
     endTime: '',
+    resolution: 'highest',
+    url: '',
+  })
+
+  assert.strictEqual(s.callCount, 1)
+})
+
+test('set processing, when call onDownload with settings', async () => {
+  const ns = downloadNS()
+  const s = sinon.stub(ns, 'renderProcessing')
+  await downloadNS().onDownload({
+    path: '',
+    startTime: '00:00:00',
+    endTime: '00:00:06',
     resolution: 'highest',
     url: '',
   })
