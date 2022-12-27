@@ -7,9 +7,7 @@ import { statusNS } from 'src/status'
 import assert from 'assert'
 
 test('render error status', () => {
-  downloadNS().downloadError$.set(new Error('test'))
-  downloadNS().downloadInProgress$.set(false)
-  downloadNS().downloaded$.set(false)
+  downloadNS().downloadStatus$.set({ status: 'error', payload: new Error('test').message })
 
   const Status = statusNS().Status
 
@@ -22,9 +20,7 @@ test('render error status', () => {
 })
 
 test('render downloaded status', () => {
-  downloadNS().downloadError$.set(null)
-  downloadNS().downloadInProgress$.set(false)
-  downloadNS().downloaded$.set(true)
+  downloadNS().downloadStatus$.set({ status: 'completed', payload: '' })
 
   const Status = statusNS().Status
 
@@ -37,9 +33,7 @@ test('render downloaded status', () => {
 })
 
 test('render in progress status', () => {
-  downloadNS().downloadError$.set(null)
-  downloadNS().downloadInProgress$.set(true)
-  downloadNS().downloaded$.set(false)
+  downloadNS().downloadStatus$.set({ status: 'in progress', payload: '' })
 
   const Status = statusNS().Status
 

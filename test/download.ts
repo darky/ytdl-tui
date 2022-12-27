@@ -47,26 +47,21 @@ test.after.each(() => sinon.restore())
 test('complete state', () => {
   downloadNS().renderComplete()
 
-  assert.strictEqual(downloadNS().downloaded$.get(), true)
-  assert.strictEqual(downloadNS().downloadInProgress$.get(), false)
-  assert.strictEqual(downloadNS().downloadError$.get(), null)
+  assert.strictEqual(downloadNS().downloadStatus$.get().status, 'completed')
 })
 
 test('in progress state', () => {
   downloadNS().renderInProgress()
 
-  assert.strictEqual(downloadNS().downloaded$.get(), false)
-  assert.strictEqual(downloadNS().downloadInProgress$.get(), true)
-  assert.strictEqual(downloadNS().downloadError$.get(), null)
+  assert.strictEqual(downloadNS().downloadStatus$.get().status, 'in progress')
 })
 
 test('error state', () => {
   const err = new Error('test')
   downloadNS().renderErr(err)
 
-  assert.strictEqual(downloadNS().downloaded$.get(), false)
-  assert.strictEqual(downloadNS().downloadInProgress$.get(), false)
-  assert.strictEqual(downloadNS().downloadError$.get(), err)
+  assert.strictEqual(downloadNS().downloadStatus$.get().status, 'error')
+  assert.strictEqual(downloadNS().downloadStatus$.get().payload, 'test')
 })
 
 test('set in progress, when call onDownload', async () => {

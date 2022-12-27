@@ -70,26 +70,19 @@ export const downloadNS = ns('download', {
   },
 
   renderComplete() {
-    downloadNS().downloadInProgress$.set(false)
-    downloadNS().downloaded$.set(true)
-    downloadNS().downloadError$.set(null)
+    downloadNS().downloadStatus$.set({ status: 'completed', payload: '' })
   },
 
   renderErr(err: Error) {
-    downloadNS().downloadInProgress$.set(false)
-    downloadNS().downloaded$.set(false)
-    downloadNS().downloadError$.set(err)
+    downloadNS().downloadStatus$.set({ status: 'error', payload: err.message })
   },
 
   renderInProgress() {
-    downloadNS().downloadError$.set(null)
-    downloadNS().downloaded$.set(false)
-    downloadNS().downloadInProgress$.set(true)
+    downloadNS().downloadStatus$.set({ status: 'in progress', payload: '' })
   },
 
-  downloaded$: atom(false),
-
-  downloadInProgress$: atom(false),
-
-  downloadError$: atom<Error | null>(null),
+  downloadStatus$: atom<{ status: 'nothing' | 'in progress' | 'error' | 'completed'; payload: string }>({
+    status: 'nothing',
+    payload: '',
+  }),
 })

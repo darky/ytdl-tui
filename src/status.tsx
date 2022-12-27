@@ -5,22 +5,20 @@ import * as React from 'react'
 import { ns } from 'repl-ns'
 import { downloadNS } from 'src/download'
 import { useStore } from 'src/useStore'
+import { match } from 'ts-pattern'
 
 export const statusNS = ns('status', {
   Status: () => {
-    const downloaded = useStore(downloadNS().downloaded$)
-    const downloadInProgress = useStore(downloadNS().downloadInProgress$)
-    const downloadError = useStore(downloadNS().downloadError$)
+    const downloadStatus = useStore(downloadNS().downloadStatus$)
 
     return (
       <>
-        {downloadInProgress ? (
-          <Spinner type="aesthetic" />
-        ) : downloaded ? (
-          <Text color={'green'}>✅ Video downloaded!</Text>
-        ) : downloadError ? (
-          <Text color={'red'}>{downloadError.message}</Text>
-        ) : null}
+        {match(downloadStatus)
+          .with({ status: 'in progress' }, () => <Spinner type="aesthetic" />)
+          .with({ status: 'completed' }, () => <Text color={'green'}>✅ Video downloaded!</Text>)
+          .with({ status: 'error' }, ({ payload }) => <Text color={'red'}>{payload}</Text>)
+          .with({ status: 'nothing' }, () => <></>)
+          .exhaustive()}
       </>
     )
   },
