@@ -4,7 +4,7 @@
 import { listenKeys, WritableAtom } from 'nanostores-cjs'
 import React from 'react'
 
-export function useStore(store: WritableAtom, opts: { keys?: string[] } = {}) {
+export function useStore<T>(store: WritableAtom<T>, opts: { keys?: string[] } = {}): T {
   let [, forceRender] = React.useState({})
 
   React.useEffect(() => {
