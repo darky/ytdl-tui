@@ -10,11 +10,21 @@ import { durationNS } from 'src/duration'
 import ffmpegPath from 'ffmpeg-static'
 import pEvent from 'p-event'
 import { on } from 'events'
+import { match, P } from 'ts-pattern'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 export const downloadNS = ns('download', {
   async onDownload(state: State) {
+    const isBusy = match(downloadNS().downloadStatus$.get().status)
+      .with(P.union('nothing', 'completed', 'error'), () => false)
+      .with(P.union('downloading', 'processing'), () => true)
+      .exhaustive()
+
+    if (isBusy) {
+      return
+    }
+
     downloadNS().renderDownloading()
 
     try {

@@ -42,7 +42,10 @@ test.before.each(() => {
   })
 })
 
-test.after.each(() => sinon.restore())
+test.after.each(() => {
+  sinon.restore()
+  downloadNS().downloadStatus$.set({ status: 'nothing', payload: '' })
+})
 
 test('complete state', () => {
   downloadNS().renderComplete()
@@ -390,4 +393,19 @@ test('should set ffmpeg size', async () => {
   })
 
   assert.strictEqual(size, '?x360')
+})
+
+test('if isBusy, not start download', async () => {
+  const ns = downloadNS()
+  ns.downloadStatus$.set({ status: 'downloading', payload: '' })
+  const s = sinon.stub(ns, 'renderDownloading')
+  await downloadNS().onDownload({
+    path: '',
+    startTime: '',
+    endTime: '',
+    resolution: 'highest',
+    url: '',
+  })
+
+  assert.strictEqual(s.callCount, 0)
 })
