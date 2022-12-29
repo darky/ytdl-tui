@@ -1,4 +1,5 @@
 declare module 'ytdl-core-muxer-by-darky' {
   import { Readable } from 'stream'
-  export default function (url: string): Readable
+  import ytdlCore from 'ytdl-core'
+  export default ytdlCore
 }
