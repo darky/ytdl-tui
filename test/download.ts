@@ -91,7 +91,7 @@ test('downloading progress', async () => {
   sinon.stub(ns, 'youtubeDownload').callsFake(() => {
     const stream = new PassThrough()
     setImmediate(() => {
-      stream.emit('progress', 1, 2, 3)
+      stream.emit('progress', 1, 2 * 1024 * 1024, 3 * 1024 * 1024)
       stream.end()
     })
     return stream
@@ -105,7 +105,7 @@ test('downloading progress', async () => {
   })
 
   assert.strictEqual(s.callCount, 2)
-  assert.strictEqual(s.args[1]?.[0], '2 of 3')
+  assert.strictEqual(s.args[1]?.[0], '2 of 3 MB')
 })
 
 test('set processing, when call onDownload with settings', async () => {

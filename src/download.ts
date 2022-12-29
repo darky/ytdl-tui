@@ -24,7 +24,9 @@ export const downloadNS = ns('download', {
       process.nextTick(async () => {
         try {
           for await (const [, downloadedBytes, totalBytes] of on(ytDownloading, 'progress')) {
-            downloadNS().renderDownloading(`${downloadedBytes} of ${totalBytes}`)
+            downloadNS().renderDownloading(
+              `${(downloadedBytes / 1024 / 1024).toFixed(0)} of ${(totalBytes / 1024 / 1024).toFixed(0)} MB`
+            )
           }
         } catch {}
       })
