@@ -14,10 +14,11 @@ export const statusNS = ns('status', {
     return (
       <>
         {match(downloadStatus)
-          .with({ status: 'downloading' }, () => (
+          .with({ status: 'downloading' }, ({ payload }) => (
             <>
               <Text>Downloading </Text>
               <Spinner type="aesthetic" />
+              <Text> {payload}</Text>
             </>
           ))
           .with({ status: 'processing' }, () => (

@@ -45,6 +45,19 @@ test('render downloading status', () => {
   }
 })
 
+test('render downloading progress', () => {
+  downloadNS().downloadStatus$.set({ status: 'downloading', payload: '2 of 3' })
+
+  const Status = statusNS().Status
+
+  const r = render(<Status />)
+  try {
+    assert.match(r.lastFrame() ?? '', /2 of 3/)
+  } finally {
+    r.unmount()
+  }
+})
+
 test('render processing status', () => {
   downloadNS().downloadStatus$.set({ status: 'processing', payload: '' })
 

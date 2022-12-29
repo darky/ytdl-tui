@@ -84,6 +84,30 @@ test('set downloading, when call onDownload', async () => {
   assert.strictEqual(s.callCount, 1)
 })
 
+test('downloading progress', async () => {
+  const ns = downloadNS()
+  const s = sinon.stub(ns, 'renderDownloading')
+  ;(ns.youtubeDownload as any).restore()
+  sinon.stub(ns, 'youtubeDownload').callsFake(() => {
+    const stream = new PassThrough()
+    setImmediate(() => {
+      stream.emit('progress', 1, 2, 3)
+      stream.end()
+    })
+    return stream
+  })
+  await downloadNS().onDownload({
+    path: '',
+    startTime: '',
+    endTime: '',
+    resolution: 'highest',
+    url: '',
+  })
+
+  assert.strictEqual(s.callCount, 2)
+  assert.strictEqual(s.args[1]?.[0], '2 of 3')
+})
+
 test('set processing, when call onDownload with settings', async () => {
   const ns = downloadNS()
   const s = sinon.stub(ns, 'renderProcessing')

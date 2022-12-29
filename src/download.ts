@@ -9,6 +9,7 @@ import { ns } from 'repl-ns'
 import { durationNS } from 'src/duration'
 import ffmpegPath from 'ffmpeg-static'
 import pEvent from 'p-event'
+import { on } from 'events'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
@@ -18,10 +19,18 @@ export const downloadNS = ns('download', {
 
     try {
       const temporaryFilePath = await downloadNS().createTempFilePath()
+      const ytDownloading = downloadNS().youtubeDownload(state.url)
+
+      process.nextTick(async () => {
+        try {
+          for await (const [, downloadedBytes, totalBytes] of on(ytDownloading, 'progress')) {
+            downloadNS().renderDownloading(`${downloadedBytes} of ${totalBytes}`)
+          }
+        } catch {}
+      })
 
       await pEvent(
-        downloadNS()
-          .youtubeDownload(state.url)
+        ytDownloading
           .on('error', downloadNS().renderErr)
           .pipe(downloadNS().writeTempFile(temporaryFilePath).on('error', downloadNS().renderErr)),
         'finish'
@@ -74,8 +83,8 @@ export const downloadNS = ns('download', {
     downloadNS().downloadStatus$.set({ status: 'error', payload: err.message })
   },
 
-  renderDownloading() {
-    downloadNS().downloadStatus$.set({ status: 'downloading', payload: '' })
+  renderDownloading(payload = '') {
+    downloadNS().downloadStatus$.set({ status: 'downloading', payload })
   },
 
   renderProcessing() {
