@@ -70,3 +70,16 @@ test('render processing status', () => {
     r.unmount()
   }
 })
+
+test('render processing progress', () => {
+  downloadNS().downloadStatus$.set({ status: 'processing', payload: '00.01.03' })
+
+  const Status = statusNS().Status
+
+  const r = render(<Status />)
+  try {
+    assert.match(r.lastFrame() ?? '', /00\.01\.03/)
+  } finally {
+    r.unmount()
+  }
+})

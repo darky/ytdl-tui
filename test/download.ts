@@ -125,6 +125,44 @@ test('set processing, when call onDownload with settings', async () => {
   assert.strictEqual(s.callCount, 1)
 })
 
+test('processing progress', async () => {
+  const ns = downloadNS()
+  const s = sinon.stub(ns, 'renderProcessing')
+  ;(ns.createFfmpeg as any).restore()
+  sinon.stub(ns, 'createFfmpeg').callsFake(() => {
+    const obj = Object.assign(new EventEmitter(), {
+      setStartTime() {
+        return obj
+      },
+      setDuration() {
+        return obj
+      },
+      size() {
+        return obj
+      },
+      saveToFile() {
+        const em = new EventEmitter()
+        setImmediate(() => em.emit('end'))
+        return em
+      },
+    })
+    setImmediate(() => {
+      obj.emit('progress', { timemark: '00.01.23' })
+    })
+    return obj as any
+  })
+  await downloadNS().onDownload({
+    path: '',
+    startTime: '00:00:00',
+    endTime: '00:00:06',
+    resolution: 'highest',
+    url: '',
+  })
+
+  assert.strictEqual(s.callCount, 2)
+  assert.strictEqual(s.args[1]?.[0], '00.01.23')
+})
+
 test('set completed, when onDownload called without settings', async () => {
   const ns = downloadNS()
   const s = sinon.stub(ns, 'renderComplete')

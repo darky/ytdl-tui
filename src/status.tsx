@@ -1,5 +1,4 @@
 import { Text } from 'ink'
-import Spinner from 'ink-spinner'
 import * as React from 'react'
 
 import { ns } from 'repl-ns'
@@ -14,19 +13,8 @@ export const statusNS = ns('status', {
     return (
       <>
         {match(downloadStatus)
-          .with({ status: 'downloading' }, ({ payload }) => (
-            <>
-              <Text>Downloading </Text>
-              <Spinner type="aesthetic" />
-              <Text> {payload}</Text>
-            </>
-          ))
-          .with({ status: 'processing' }, () => (
-            <>
-              <Text>Processing </Text>
-              <Spinner type="arrow3" />
-            </>
-          ))
+          .with({ status: 'downloading' }, ({ payload }) => <Text>Downloading... {payload}</Text>)
+          .with({ status: 'processing' }, ({ payload }) => <Text>Processing... {payload}</Text>)
           .with({ status: 'completed' }, () => <Text color={'green'}>✅ Video downloaded!</Text>)
           .with({ status: 'error' }, ({ payload }) => <Text color={'red'}>{payload}</Text>)
           .with({ status: 'nothing' }, () => <></>)

@@ -56,6 +56,14 @@ export const downloadNS = ns('download', {
           .then(ff => (state.endTime ? ff.setDuration(durationNS().calcDuration(state)) : ff))
           .then(ff => (state.resolution === 'highest' ? ff : ff.size(`?x${state.resolution}`)))
 
+        process.nextTick(async () => {
+          try {
+            for await (const [{ timemark }] of on(ffmpegStream, 'progress')) {
+              downloadNS().renderProcessing(timemark)
+            }
+          } catch {}
+        })
+
         await pEvent(ffmpegStream.saveToFile(state.path), 'end')
       } else {
         await downloadNS().cpFile(temporaryFilePath, state.path)
@@ -99,8 +107,8 @@ export const downloadNS = ns('download', {
     downloadNS().downloadStatus$.set({ status: 'downloading', payload })
   },
 
-  renderProcessing() {
-    downloadNS().downloadStatus$.set({ status: 'processing', payload: '' })
+  renderProcessing(payload = '') {
+    downloadNS().downloadStatus$.set({ status: 'processing', payload })
   },
 
   downloadStatus$: atom<{ status: 'nothing' | 'downloading' | 'processing' | 'error' | 'completed'; payload: string }>({
