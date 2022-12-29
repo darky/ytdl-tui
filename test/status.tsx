@@ -45,7 +45,7 @@ test('render downloading status', () => {
   }
 })
 
-test('render downloading status', () => {
+test('render processing status', () => {
   downloadNS().downloadStatus$.set({ status: 'processing', payload: '' })
 
   const Status = statusNS().Status
