@@ -1,10 +1,10 @@
 import { ns } from 'repl-ns'
-import type { State } from 'src/types'
+import type { Context } from 'src/types'
 
 export const durationNS = ns('duration', {
-  calcDuration(state: State) {
-    const startSec = durationNS().time2Seconds(state.startTime)
-    const endSec = durationNS().time2Seconds(state.endTime)
+  calcDuration(ctx: Context) {
+    const startSec = durationNS().time2Seconds(ctx.startTime)
+    const endSec = durationNS().time2Seconds(ctx.endTime)
     const duration = endSec - startSec
 
     if (duration <= 0) {

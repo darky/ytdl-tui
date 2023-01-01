@@ -1,4 +1,4 @@
-export type State = {
+export type Context = {
   url: string
   path: string
   startTime: string

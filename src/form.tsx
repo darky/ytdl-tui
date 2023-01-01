@@ -4,7 +4,7 @@ import { Form, FormProps } from 'ink-form'
 import { atom } from 'nanostores-cjs'
 import { ns } from 'repl-ns'
 import { useStore } from 'src/useStore'
-import type { State } from 'src/types'
+import type { Context } from 'src/types'
 import { downloadNS } from 'src/download'
 
 export const formNS = ns('form', {
@@ -18,21 +18,21 @@ export const formNS = ns('form', {
     return (
       <Form
         {...formNS().formProps({ url, path, startTime, endTime, resolution })}
-        onSubmit={state => {
-          downloadNS().onDownload(state as State)
+        onSubmit={ctx => {
+          downloadNS().onDownload(ctx as Context)
         }}
       />
     )
   },
 
-  formProps: ({ url, path, startTime, endTime, resolution }: State) =>
+  formProps: ({ url, path, startTime, endTime, resolution }: Context) =>
     ({
-      onChange: (state: State) => {
-        formNS().url$.set(state.url)
-        formNS().path$.set(state.path)
-        formNS().startTime$.set(state.startTime)
-        formNS().endTime$.set(state.endTime)
-        formNS().resolution$.set(state.resolution)
+      onChange: (ctx: Context) => {
+        formNS().url$.set(ctx.url)
+        formNS().path$.set(ctx.path)
+        formNS().startTime$.set(ctx.startTime)
+        formNS().endTime$.set(ctx.endTime)
+        formNS().resolution$.set(ctx.resolution)
       },
       form: {
         title: 'Please setup form for downloading video from Youtube',
@@ -92,5 +92,5 @@ export const formNS = ns('form', {
 
   endTime$: atom(''),
 
-  resolution$: atom<State['resolution']>('highest'),
+  resolution$: atom<Context['resolution']>('highest'),
 })

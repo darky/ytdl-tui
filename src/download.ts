@@ -1,7 +1,7 @@
 import yt from 'ytdl-core-muxer-by-darky'
 import ffmpeg from 'fluent-ffmpeg'
 import { atom } from 'nanostores-cjs'
-import type { State } from 'src/types'
+import type { Context } from 'src/types'
 import { ns } from 'repl-ns'
 import { durationNS } from 'src/duration'
 import ffmpegPath from 'ffmpeg-static'
@@ -13,7 +13,7 @@ import { fsNS } from 'src/fs'
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
 export const downloadNS = ns('download', {
-  async onDownload(state: State) {
+  async onDownload(ctx: Context) {
     const isBusy = match(downloadNS().downloadStatus$.get().status)
       .with(P.union('nothing', 'completed', 'error'), () => false)
       .with(P.union('downloading', 'processing'), () => true)
@@ -27,11 +27,11 @@ export const downloadNS = ns('download', {
     downloadNS().renderDownloading()
 
     try {
-      const cachedTempFilePath = fsNS().cachedTempFilePath(state.url)
+      const cachedTempFilePath = fsNS().cachedTempFilePath(ctx.url)
       const temporaryFilePath = cachedTempFilePath ?? (await fsNS().createTempFilePath())
 
       if (!cachedTempFilePath) {
-        const ytDownloading = downloadNS().youtubeDownload(state.url)
+        const ytDownloading = downloadNS().youtubeDownload(ctx.url)
 
         process.nextTick(async () => {
           try {
@@ -51,13 +51,13 @@ export const downloadNS = ns('download', {
         )
       }
 
-      if (state.startTime || state.endTime || state.resolution !== 'highest') {
+      if (ctx.startTime || ctx.endTime || ctx.resolution !== 'highest') {
         downloadNS().renderProcessing()
 
         const ffmpegStream = await Promise.resolve(downloadNS().createFfmpeg(temporaryFilePath))
-          .then(ff => (state.startTime ? ff.setStartTime(state.startTime) : ff))
-          .then(ff => (state.endTime ? ff.setDuration(durationNS().calcDuration(state)) : ff))
-          .then(ff => (state.resolution === 'highest' ? ff : ff.size(`?x${state.resolution}`)))
+          .then(ff => (ctx.startTime ? ff.setStartTime(ctx.startTime) : ff))
+          .then(ff => (ctx.endTime ? ff.setDuration(durationNS().calcDuration(ctx)) : ff))
+          .then(ff => (ctx.resolution === 'highest' ? ff : ff.size(`?x${ctx.resolution}`)))
 
         process.nextTick(async () => {
           try {
@@ -67,12 +67,12 @@ export const downloadNS = ns('download', {
           } catch {}
         })
 
-        await pEvent(ffmpegStream.saveToFile(state.path), 'end')
+        await pEvent(ffmpegStream.saveToFile(ctx.path), 'end')
       } else {
-        await fsNS().cpFile(temporaryFilePath, state.path)
+        await fsNS().cpFile(temporaryFilePath, ctx.path)
       }
 
-      !cachedTempFilePath && fsNS().setCachedTempFilePath(state.url, temporaryFilePath)
+      !cachedTempFilePath && fsNS().setCachedTempFilePath(ctx.url, temporaryFilePath)
       downloadNS().renderComplete()
     } catch (err) {
       downloadNS().renderErr(err as Error)
