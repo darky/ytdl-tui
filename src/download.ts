@@ -9,6 +9,7 @@ import pEvent from 'p-event'
 import { on } from 'events'
 import { match, P } from 'ts-pattern'
 import { fsNS } from 'src/fs'
+import { pipeline } from 'stream/promises'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
@@ -43,12 +44,7 @@ export const downloadNS = ns('download', {
           } catch {}
         })
 
-        await pEvent(
-          ytDownloading
-            .on('error', downloadNS().renderErr)
-            .pipe(fsNS().writeTempFile(temporaryFilePath).on('error', downloadNS().renderErr)),
-          'finish'
-        )
+        await pipeline(ytDownloading, fsNS().writeTempFile(temporaryFilePath))
       }
 
       if (ctx.startTime || ctx.endTime || ctx.resolution !== 'highest') {

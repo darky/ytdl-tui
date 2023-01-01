@@ -2,8 +2,7 @@ import assert from 'assert'
 import { downloadNS } from 'src/download'
 import { test } from 'uvu'
 import sinon from 'sinon'
-import { PassThrough } from 'stream'
-import { setTimeout } from 'timers/promises'
+import { PassThrough, Writable } from 'stream'
 import EventEmitter from 'events'
 import { fsNS } from 'src/fs'
 
@@ -18,7 +17,7 @@ test.before.each(() => {
     return stream
   })
   sinon.stub(fsns, 'writeTempFile').callsFake(() => {
-    const stream = new PassThrough()
+    const stream = new Writable()
     setImmediate(() => stream.end())
     return stream as any
   })
@@ -246,8 +245,8 @@ test('set error, when something wrong with file writing to fs', async () => {
   const s = sinon.stub(ns, 'renderErr')
   ;(fsns.writeTempFile as any).restore()
   sinon.stub(fsns, 'writeTempFile').callsFake(() => {
-    const stream = new PassThrough()
-    setImmediate(() => stream.emit('error', 'err'))
+    const stream = new Writable()
+    process.nextTick(() => stream.destroy(new Error('err')))
     return stream as any
   })
   await downloadNS().onDownload({
@@ -257,9 +256,9 @@ test('set error, when something wrong with file writing to fs', async () => {
     resolution: 'highest',
     url: '',
   })
-  await setTimeout(1)
+
   assert.strictEqual(s.callCount, 1)
-  assert.strictEqual((s.args[0] as any)[0], 'err')
+  assert.strictEqual((s.args[0] as any)[0].message, 'err')
 })
 
 test('should copy file from temporary for basic settings', async () => {
