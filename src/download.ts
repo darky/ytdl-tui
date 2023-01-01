@@ -25,6 +25,7 @@ export const downloadNS = ns('download', {
       return
     }
 
+    const ac = new AbortController()
     downloadNS().renderDownloading()
 
     try {
@@ -33,7 +34,7 @@ export const downloadNS = ns('download', {
 
       process.nextTick(async () => {
         try {
-          for await (const [, downloadedBytes, totalBytes] of on(ytDownloading, 'progress')) {
+          for await (const [, downloadedBytes, totalBytes] of on(ytDownloading, 'progress', { signal: ac.signal })) {
             downloadNS().renderDownloading(
               `${(downloadedBytes / 1024 / 1024).toFixed(0)} of ${(totalBytes / 1024 / 1024).toFixed(0)} MB`
             )
@@ -58,7 +59,7 @@ export const downloadNS = ns('download', {
 
         process.nextTick(async () => {
           try {
-            for await (const [{ timemark }] of on(ffmpegStream, 'progress')) {
+            for await (const [{ timemark }] of on(ffmpegStream, 'progress', { signal: ac.signal })) {
               downloadNS().renderProcessing(timemark)
             }
           } catch {}
@@ -72,6 +73,8 @@ export const downloadNS = ns('download', {
       downloadNS().renderComplete()
     } catch (err) {
       downloadNS().renderErr(err as Error)
+    } finally {
+      ac.abort()
     }
   },
 
