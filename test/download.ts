@@ -46,6 +46,7 @@ test.before.each(() => {
 
 test.after.each(() => {
   sinon.restore()
+  fsNS().tmpFilePathCache = {}
   downloadNS().downloadStatus$.set({ status: 'nothing', payload: '' })
 })
 
@@ -450,4 +451,89 @@ test('if isBusy, not start download', async () => {
   })
 
   assert.strictEqual(s.callCount, 0)
+})
+
+test('set temp file cache, when downloading complete', async () => {
+  await downloadNS().onDownload({
+    path: '',
+    startTime: '',
+    endTime: '',
+    resolution: 'highest',
+    url: 'test-url',
+  })
+
+  assert.strictEqual(fsNS().cachedTempFilePath('test-url'), 'test-temp-path')
+})
+
+test('should not youtube download, if temp file cache exists', async () => {
+  fsNS().setCachedTempFilePath('test-url', 'test-path')
+  const ns = downloadNS()
+  ;(ns.youtubeDownload as any).restore()
+  const s = sinon.stub(ns, 'youtubeDownload').callsFake(() => {
+    const stream = new PassThrough()
+    setImmediate(() => stream.end())
+    return stream
+  })
+  await downloadNS().onDownload({
+    path: '',
+    startTime: '',
+    endTime: '',
+    resolution: 'highest',
+    url: 'test-url',
+  })
+
+  assert.strictEqual(s.callCount, 0)
+})
+
+test('should copy file from temporary cache, if exists', async () => {
+  fsNS().setCachedTempFilePath('test-url', 'test-path-src')
+  const fsns = fsNS()
+  ;(fsns.cpFile as any).restore()
+  const s = sinon.stub(fsns, 'cpFile').returns(Promise.resolve())
+  await downloadNS().onDownload({
+    path: 'test-path-dest',
+    startTime: '',
+    endTime: '',
+    resolution: 'highest',
+    url: 'test-url',
+  })
+
+  assert.strictEqual(s.callCount, 1)
+  assert.strictEqual((s.args[0] as any)[0], 'test-path-src')
+  assert.strictEqual((s.args[0] as any)[1], 'test-path-dest')
+})
+
+test('should create ffmpeg from temporary cache, if exists', async () => {
+  fsNS().setCachedTempFilePath('test-url', 'test-path-src')
+  const dns = downloadNS()
+  ;(dns.createFfmpeg as any).restore()
+  const s = sinon.stub(dns, 'createFfmpeg').callsFake(() => {
+    const obj = {
+      setStartTime() {
+        return obj
+      },
+      setDuration() {
+        return obj
+      },
+      size() {
+        return obj
+      },
+      saveToFile() {
+        const em = new EventEmitter()
+        setImmediate(() => em.emit('end'))
+        return em
+      },
+    }
+    return obj as any
+  })
+  await downloadNS().onDownload({
+    path: 'test-path-dest',
+    startTime: '00:00:03',
+    endTime: '',
+    resolution: 'highest',
+    url: 'test-url',
+  })
+
+  assert.strictEqual(s.callCount, 1)
+  assert.strictEqual((s.args[0] as any)[0], 'test-path-src')
 })

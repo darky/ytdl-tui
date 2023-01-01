@@ -27,25 +27,29 @@ export const downloadNS = ns('download', {
     downloadNS().renderDownloading()
 
     try {
-      const temporaryFilePath = await fsNS().createTempFilePath()
-      const ytDownloading = downloadNS().youtubeDownload(state.url)
+      const cachedTempFilePath = fsNS().cachedTempFilePath(state.url)
+      const temporaryFilePath = cachedTempFilePath ?? (await fsNS().createTempFilePath())
 
-      process.nextTick(async () => {
-        try {
-          for await (const [, downloadedBytes, totalBytes] of on(ytDownloading, 'progress', { signal: ac.signal })) {
-            downloadNS().renderDownloading(
-              `${(downloadedBytes / 1024 / 1024).toFixed(0)} of ${(totalBytes / 1024 / 1024).toFixed(0)} MB`
-            )
-          }
-        } catch {}
-      })
+      if (!cachedTempFilePath) {
+        const ytDownloading = downloadNS().youtubeDownload(state.url)
 
-      await pEvent(
-        ytDownloading
-          .on('error', downloadNS().renderErr)
-          .pipe(fsNS().writeTempFile(temporaryFilePath).on('error', downloadNS().renderErr)),
-        'finish'
-      )
+        process.nextTick(async () => {
+          try {
+            for await (const [, downloadedBytes, totalBytes] of on(ytDownloading, 'progress', { signal: ac.signal })) {
+              downloadNS().renderDownloading(
+                `${(downloadedBytes / 1024 / 1024).toFixed(0)} of ${(totalBytes / 1024 / 1024).toFixed(0)} MB`
+              )
+            }
+          } catch {}
+        })
+
+        await pEvent(
+          ytDownloading
+            .on('error', downloadNS().renderErr)
+            .pipe(fsNS().writeTempFile(temporaryFilePath).on('error', downloadNS().renderErr)),
+          'finish'
+        )
+      }
 
       if (state.startTime || state.endTime || state.resolution !== 'highest') {
         downloadNS().renderProcessing()
@@ -68,6 +72,7 @@ export const downloadNS = ns('download', {
         await fsNS().cpFile(temporaryFilePath, state.path)
       }
 
+      !cachedTempFilePath && fsNS().setCachedTempFilePath(state.url, temporaryFilePath)
       downloadNS().renderComplete()
     } catch (err) {
       downloadNS().renderErr(err as Error)
