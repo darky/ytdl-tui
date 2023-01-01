@@ -1,8 +1,5 @@
 import yt from 'ytdl-core-muxer-by-darky'
 import ffmpeg from 'fluent-ffmpeg'
-import fs from 'fs'
-import { copyFile, mkdtemp } from 'fs/promises'
-import { tmpdir } from 'os'
 import { atom } from 'nanostores-cjs'
 import type { State } from 'src/types'
 import { ns } from 'repl-ns'
@@ -11,6 +8,7 @@ import ffmpegPath from 'ffmpeg-static'
 import pEvent from 'p-event'
 import { on } from 'events'
 import { match, P } from 'ts-pattern'
+import { fsNS } from 'src/fs'
 
 if (ffmpegPath) process.env['FFMPEG_PATH'] = ffmpegPath
 
@@ -29,7 +27,7 @@ export const downloadNS = ns('download', {
     downloadNS().renderDownloading()
 
     try {
-      const temporaryFilePath = await downloadNS().createTempFilePath()
+      const temporaryFilePath = await fsNS().createTempFilePath()
       const ytDownloading = downloadNS().youtubeDownload(state.url)
 
       process.nextTick(async () => {
@@ -45,7 +43,7 @@ export const downloadNS = ns('download', {
       await pEvent(
         ytDownloading
           .on('error', downloadNS().renderErr)
-          .pipe(downloadNS().writeTempFile(temporaryFilePath).on('error', downloadNS().renderErr)),
+          .pipe(fsNS().writeTempFile(temporaryFilePath).on('error', downloadNS().renderErr)),
         'finish'
       )
 
@@ -67,7 +65,7 @@ export const downloadNS = ns('download', {
 
         await pEvent(ffmpegStream.saveToFile(state.path), 'end')
       } else {
-        await downloadNS().cpFile(temporaryFilePath, state.path)
+        await fsNS().cpFile(temporaryFilePath, state.path)
       }
 
       downloadNS().renderComplete()
@@ -78,24 +76,12 @@ export const downloadNS = ns('download', {
     }
   },
 
-  async createTempFilePath() {
-    return `${await mkdtemp(`${tmpdir()}/ytdl-tui-`)}/video.mp4`
-  },
-
   youtubeDownload(url: string) {
     return yt(url)
   },
 
-  writeTempFile(path: string) {
-    return fs.createWriteStream(path)
-  },
-
   createFfmpeg(path: string) {
     return ffmpeg(path)
-  },
-
-  async cpFile(from: string, to: string) {
-    await copyFile(from, to)
   },
 
   renderComplete() {

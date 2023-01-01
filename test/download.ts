@@ -5,22 +5,24 @@ import sinon from 'sinon'
 import { PassThrough } from 'stream'
 import { setTimeout } from 'timers/promises'
 import EventEmitter from 'events'
+import { fsNS } from 'src/fs'
 
 test.before.each(() => {
   const ns = downloadNS()
+  const fsns = fsNS()
 
-  sinon.stub(ns, 'createTempFilePath').returns(Promise.resolve('test-temp-path'))
+  sinon.stub(fsns, 'createTempFilePath').returns(Promise.resolve('test-temp-path'))
   sinon.stub(ns, 'youtubeDownload').callsFake(() => {
     const stream = new PassThrough()
     setImmediate(() => stream.end())
     return stream
   })
-  sinon.stub(ns, 'writeTempFile').callsFake(() => {
+  sinon.stub(fsns, 'writeTempFile').callsFake(() => {
     const stream = new PassThrough()
     setImmediate(() => stream.end())
     return stream as any
   })
-  sinon.stub(ns, 'cpFile').returns(Promise.resolve())
+  sinon.stub(fsns, 'cpFile').returns(Promise.resolve())
   sinon.stub(ns, 'createFfmpeg').callsFake(() => {
     const obj = {
       setStartTime() {
@@ -179,9 +181,10 @@ test('set completed, when onDownload called without settings', async () => {
 
 test('set error, when something wrong with temp file creation', async () => {
   const ns = downloadNS()
+  const fsns = fsNS()
   const s = sinon.stub(ns, 'renderErr')
-  ;(ns.createTempFilePath as any).restore()
-  sinon.stub(ns, 'createTempFilePath').rejects('err')
+  ;(fsns.createTempFilePath as any).restore()
+  sinon.stub(fsns, 'createTempFilePath').rejects('err')
   await downloadNS().onDownload({
     path: '',
     startTime: '',
@@ -238,9 +241,10 @@ test('should call youtube with url', async () => {
 
 test('set error, when something wrong with file writing to fs', async () => {
   const ns = downloadNS()
+  const fsns = fsNS()
   const s = sinon.stub(ns, 'renderErr')
-  ;(ns.writeTempFile as any).restore()
-  sinon.stub(ns, 'writeTempFile').callsFake(() => {
+  ;(fsns.writeTempFile as any).restore()
+  sinon.stub(fsns, 'writeTempFile').callsFake(() => {
     const stream = new PassThrough()
     setImmediate(() => stream.emit('error', 'err'))
     return stream as any
@@ -260,9 +264,9 @@ test('set error, when something wrong with file writing to fs', async () => {
 test('should copy file from temporary for basic settings', async () => {
   let from = ''
   let to = ''
-  const ns = downloadNS()
-  ;(ns.cpFile as any).restore()
-  const s = sinon.stub(ns, 'cpFile').callsFake(async (f, t) => {
+  const fsns = fsNS()
+  ;(fsns.cpFile as any).restore()
+  const s = sinon.stub(fsns, 'cpFile').callsFake(async (f, t) => {
     from = f
     to = t
   })
