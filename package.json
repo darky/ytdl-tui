@@ -32,7 +32,6 @@
     "ink-big-text": "^1.2.0",
     "ink-form": "^1.0.2",
     "nanostores-cjs": "^0.7.1",
-    "p-event": "^4.2.0",
     "react": "^17.0.2",
     "repl-ns": "^0.0.15",
     "ts-pattern": "^4.0.6",

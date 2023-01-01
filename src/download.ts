@@ -5,8 +5,7 @@ import type { Context } from 'src/types'
 import { ns } from 'repl-ns'
 import { durationNS } from 'src/duration'
 import ffmpegPath from 'ffmpeg-static'
-import pEvent from 'p-event'
-import { on } from 'events'
+import { on, once } from 'events'
 import { match, P } from 'ts-pattern'
 import { fsNS } from 'src/fs'
 import { pipeline } from 'stream/promises'
@@ -63,7 +62,7 @@ export const downloadNS = ns('download', {
           } catch {}
         })
 
-        await pEvent(ffmpegStream.saveToFile(ctx.path), 'end')
+        await once(ffmpegStream.saveToFile(ctx.path), 'end')
       } else {
         await fsNS().cpFile(temporaryFilePath, ctx.path)
       }
