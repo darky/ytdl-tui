@@ -2,7 +2,7 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.tsdk": "node_modules/typescript/lib",
   "code-runner.executorMapByFileExtension": {
-    ".ts": "npx node-remote-repl",
-    ".tsx": "npx node-remote-repl"
+    ".ts": "USE_SWC=1 npx node-remote-repl",
+    ".tsx": "USE_SWC=1 npx node-remote-repl"
   }
 }
