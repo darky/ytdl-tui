@@ -17,5 +17,6 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm ci
       - run: npx prettier --check "{src/*.ts,test/*.ts}"
-      - run: alias gsed="sed"
-      - run: npm run test
+      - run: |
+          alias gsed="sed"
+          npm run test
